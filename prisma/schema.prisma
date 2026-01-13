@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String       // hashed with bcrypt
+  credentials   Credential[]
+  webhookLogs   WebhookLog[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Credential {
+  id          String   @id @default(cuid())
+  name        String   // friendly name like "Production Key"
+  profileId   String
+  serverKey   String   // encrypted
+  region      String   @default("global") // PayTabs region: global, saudi, uae, egypt, oman, jordan
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WebhookLog {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payload       Json
+  verified      Boolean
+  transactionId String?
+  status        String?
+  createdAt     DateTime @default(now())
+}
